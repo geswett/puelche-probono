@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puelche HC — Horas Pro Bono</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F3;
+  --surface:#FFFFFF;
+  --surface2:#F0EEE9;
+  --border:#D8D5CE;
+  --border2:#C8C5BD;
+  --text:#1A1917;
+  --text2:#5C5A55;
+  --text3:#9A9891;
+  --accent:#1A6B4A;
+  --accent-bg:#E5F4EE;
+  --blue:#1A4D8F;
+  --blue-bg:#E5EEFA;
+  --amber:#7A4F0A;
+  --amber-bg:#FDF0D8;
+  --purple:#4A3A8F;
+  --purple-bg:#EEEAF8;
+  --teal:#0F6E6E;
+  --teal-bg:#DEF3F1;
+  --red:#8F1A1A;
+  --red-bg:#FAE5E5;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --radius:8px;
+  --radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.logo{font-size:15px;font-weight:600;color:var(--text);flex:1;white-space:nowrap}
+.logo span{color:var(--accent)}
+.tabs{display:flex;gap:2px}
+.tab{padding:6px 14px;border:none;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:500;background:transparent;color:var(--text2);transition:all .15s}
+.tab:hover{background:var(--surface2)}
+.tab.active{background:var(--text);color:#fff}
+.btn{padding:6px 14px;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:500;background:var(--surface);color:var(--text);transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--border2);background:var(--surface2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#155c3f}
+
+/* FILTERS */
+.filters{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;position:sticky;top:52px;z-index:95}
+.filters select,.filters input[type=text]{font-size:13px;padding:5px 9px;height:32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none}
+.filters select:focus,.filters input:focus{border-color:var(--accent)}
+.cnt{font-size:12px;color:var(--text3);margin-left:auto}
+
+/* CONTENT */
+.content{padding:14px 16px}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 160px);border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);width:100%}
+.table-wrap thead th{position:sticky;top:0;z-index:10;box-shadow:0 1px 0 var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-weight:600;font-size:11px;color:var(--text2);white-space:nowrap}
+th.sort{cursor:pointer}
+th.sort:hover{color:var(--text)}
+td{padding:0;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAF8}
+.cell{padding:7px 8px;min-height:34px;display:flex;align-items:center;gap:4px}
+.editable{cursor:pointer}
+.editable:hover .cell{background:#F5F4F0;border-radius:4px}
+.editable:hover .cell::after{content:'✎';font-size:10px;color:var(--text3);margin-left:auto;flex-shrink:0}
+.cell-input{width:100%;padding:5px 7px;border:2px solid var(--accent);border-radius:5px;background:#fff;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+.cell-select{width:100%;padding:4px 6px;border:2px solid var(--accent);border-radius:5px;background:#fff;color:var(--text);font-size:12px;font-family:inherit;outline:none}
+.cell-date{width:100%;padding:4px 6px;border:2px solid var(--accent);border-radius:5px;background:#fff;color:var(--text);font-size:12px;outline:none}
+.cell-num{width:100%;padding:5px 7px;border:2px solid var(--accent);border-radius:5px;background:#fff;color:var(--text);font-size:13px;font-family:inherit;outline:none}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-persona{background:var(--accent-bg);color:var(--accent)}
+.b-vacio{background:var(--surface2);color:var(--text3)}
+.hint{font-size:12px;color:var(--text3)}
+.del-btn{opacity:0;transition:opacity .15s;background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:3px 6px;border-radius:4px}
+.del-btn:hover{color:var(--red);background:var(--red-bg)}
+tr:hover .del-btn{opacity:1}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,18,15,0.55);z-index:300;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:22px;width:96%;max-width:460px;margin-bottom:40px;box-shadow:var(--shadow)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:600}
+.mc{background:none;border:none;cursor:pointer;color:var(--text2);font-size:22px;line-height:1;padding:0 4px;border-radius:4px}
+.mc:hover{color:var(--text);background:var(--surface2)}
+.nf{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.nf label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.nf select,.nf input{font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+.nf select:focus,.nf input:focus{border-color:var(--accent)}
+.fa{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* SETTINGS modal */
+.tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tag-item{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600}
+.tag-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;line-height:1;padding:0 2px;border-radius:3px}
+.tag-del:hover{color:var(--red)}
+.tag-add{display:flex;gap:6px}
+.tag-add input{flex:1;padding:6px 9px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;outline:none}
+.tag-add input:focus{border-color:var(--accent)}
+.tag-add button{padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:600}
+
+/* RESUMEN (matriz persona x año) */
+.ct-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--surface)}
+.ct{width:100%;border-collapse:collapse;font-size:13px}
+.ct th{padding:9px 12px;background:var(--surface2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-weight:700;font-size:11px;text-align:center;color:var(--text2)}
+.ct th.left{text-align:left}
+.ct td{padding:8px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;font-size:13px}
+.ct td:last-child,.ct th:last-child{border-right:none}
+.ct td.name{font-weight:600;text-align:left;background:var(--surface)}
+.ct td.total{font-weight:700;background:var(--surface2)}
+.ct tr:last-child td{border-bottom:none}
+.ct tr.total-row td{font-weight:700;border-top:2px solid var(--border2);background:var(--surface2)}
+
+/* SORTIND */
+.si{font-size:9px;margin-left:2px;color:var(--accent)}
+
+/* LOCK SCREEN */
+.lock-overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.lock-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;width:100%;max-width:360px;box-shadow:var(--shadow);text-align:center}
+.lock-card h1{font-size:16px;font-weight:600;margin-bottom:4px}
+.lock-card p{font-size:12px;color:var(--text2);margin-bottom:18px}
+.lock-card input{width:100%;font-size:14px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);outline:none;margin-bottom:10px;text-align:center;font-family:inherit}
+.lock-card input:focus{border-color:var(--accent)}
+.lock-card button{width:100%;padding:10px 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-size:13px;font-weight:600}
+.lock-card button:hover{background:#155c3f}
+.lock-error{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+@media(max-width:700px){
+  .topbar{height:auto;padding:8px 12px}
+}
+</style>
+</head>
+<body>
+
+<div class="lock-overlay" id="lock-overlay">
+  <div class="lock-card">
+    <h1>Puelche HC — Horas Pro Bono</h1>
+    <p>Ingresa la clave de acceso</p>
+    <input type="password" id="lock-input" placeholder="Clave" autocomplete="off" onkeydown="if(event.key==='Enter')checkLockPassword()">
+    <button onclick="checkLockPassword()">Entrar</button>
+    <div class="lock-error" id="lock-error">Clave incorrecta.</div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="logo">Puelche HC — <span>Horas Pro Bono</span></div>
+  <div class="tabs">
+    <button class="tab active" id="tab-registros" onclick="setTab('registros',this)">Registros</button>
+    <button class="tab" id="tab-resumen" onclick="setTab('resumen',this)">Resumen</button>
+  </div>
+  <button class="btn" onclick="openSettings()" title="Gestionar personas Puelche HC">⚙ Personas</button>
+  <button class="btn" onclick="syncAll()" title="Forzar guardado de todos los cambios">↑ Sincronizar</button>
+  <button class="btn btn-primary" onclick="openNew()">+ Nuevo registro</button>
+</div>
+<div id="status-bar" style="display:none;padding:8px 20px;font-size:13px;font-weight:500;transition:all .3s"></div>
+
+<div class="filters" id="filter-bar">
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Persona</span>
+  <select id="f-persona" onchange="render()"><option value="">Todas</option></select></div>
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Año</span>
+  <select id="f-anio" onchange="render()"><option value="">Todos</option></select></div>
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Buscar</span>
+  <input type="text" id="f-search" placeholder="Buscar organización, actividad o detalle..." oninput="render()" style="flex:1;min-width:160px;max-width:280px">
+  </div>
+  <span class="cnt" id="cnt"></span>
+</div>
+
+<div class="filters" id="resumen-filter-bar" style="display:none">
+  <div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--text3)">Organización</span>
+  <input type="text" id="r-org" placeholder="Filtrar por organización..." oninput="render()" style="min-width:200px"></div>
+</div>
+
+<div id="main-content" class="content"></div>
+
+<!-- NUEVO REGISTRO -->
+<div class="overlay" id="ov-new">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title">Nuevo registro</div><button class="mc" onclick="closeNew()">×</button></div>
+  <div class="nf"><label>Fecha</label><input type="date" id="n-fecha"></div>
+  <div class="nf"><label>Actividad</label><input id="n-actividad" placeholder="Ej: Entrevista abierta"></div>
+  <div class="nf"><label>Detalle</label><input id="n-detalle" placeholder="Ej: Nombre del candidato / descripción"></div>
+  <div class="nf"><label>Horas</label><input type="number" id="n-horas" step="0.5" min="0" placeholder="Ej: 1.5"></div>
+  <div class="nf"><label>Nombre organización</label><input id="n-org" placeholder="Ej: Fundación Kalén"></div>
+  <div class="nf"><label>Persona Puelche HC</label><select id="n-persona"><option value="">— Sin asignar —</option></select></div>
+  <div class="fa">
+    <button class="btn" onclick="closeNew()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveNew()">Crear</button>
+  </div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="overlay" id="ov-settings">
+<div class="modal" style="max-width:460px">
+  <div class="modal-hdr"><div class="modal-title">⚙ Gestionar personas Puelche HC</div><button class="mc" onclick="document.getElementById('ov-settings').classList.remove('open')">×</button></div>
+  <div id="tag-persona" class="tag-list"></div>
+  <div class="tag-add">
+    <input id="new-persona-name" placeholder="Nombre completo (ej: Nueva Persona)">
+    <button onclick="addPersona()">Agregar</button>
+  </div>
+  <div class="fa"><button class="btn btn-primary" onclick="document.getElementById('ov-settings').classList.remove('open');initSelects();render()">Listo</button></div>
+</div>
+</div>
+
+<script>
+// ─── PERSONAS PUELCHE HC (editable en sesión, agrega más desde ⚙) ───────────
+let PERSONAS = [
+  'Beverlyn von Freeden',
+  'Carmen Santa Cruz',
+  'Catalina del Valle',
+  'Constanza Eterovic',
+  'Elisa Guridi',
+  'Gloria Tironi',
+  'Ignacia del Río',
+  'María José Castaño',
+  'Mónica Lira',
+];
+function sortedPersonas(){ return [...PERSONAS].sort((a,b)=>a.localeCompare(b,'es')); }
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+let DATA = [];
+let nextId = 1;
+let curTab = 'registros';
+let curSortCol='fecha', curSortDir=-1;
+let activeCell=null;
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function fmtDate(d){
+  if(!d)return'';
+  try{const p=d.split('-');return`${p[2]}/${p[1]}/${p[0].slice(2)}`;}catch{return '';}
+}
+function fmtHoras(h){
+  if(h===null||h===undefined||h==='')return'';
+  const n=Number(h);
+  return Number.isInteger(n)?String(n):n.toFixed(1);
+}
+function anioOf(r){ return r.fecha ? r.fecha.slice(0,4) : null; }
+
+// ─── SELECTS ─────────────────────────────────────────────────────────────────
+function fillSel(id,opts,withPlaceholder){
+  const el=document.getElementById(id); if(!el)return;
+  const keepFirst = withPlaceholder!==false;
+  while(el.options.length>(keepFirst?1:0))el.remove(keepFirst?1:0);
+  opts.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;el.appendChild(o);});
+}
+function initSelects(){
+  fillSel('n-persona', sortedPersonas());
+  const fPersona=document.getElementById('f-persona');
+  fPersona.innerHTML='<option value="">Todas</option>'+sortedPersonas().map(n=>`<option value="${n}">${n}</option>`).join('');
+  const anios=[...new Set(DATA.map(anioOf).filter(Boolean))].sort().reverse();
+  const fAnio=document.getElementById('f-anio');
+  fAnio.innerHTML='<option value="">Todos</option>'+anios.map(a=>`<option value="${a}">${a}</option>`).join('');
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function setTab(t, el){
+  curTab = t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('filter-bar').style.display = t==='registros' ? 'flex' : 'none';
+  document.getElementById('resumen-filter-bar').style.display = t==='resumen' ? 'flex' : 'none';
+  render();
+}
+
+// ─── COMMIT CELL ─────────────────────────────────────────────────────────────
+function commitCell(rowId,field,value){
+  const r=DATA.find(x=>x.id===rowId); if(!r)return;
+  if(field==='horas'){ value = value===''?0:Number(value); }
+  r[field]=value;
+  activeCell=null; render();
+  saveToSheets(r);
+}
+
+// ─── INLINE CELL ─────────────────────────────────────────────────────────────
+function makeCell(rowId,field,display,editType,opts=null){
+  const isActive=activeCell&&activeCell.rowId===rowId&&activeCell.field===field;
+  const r=DATA.find(x=>x.id===rowId);
+  if(isActive){
+    if(editType==='text'){
+      const val=(r[field]||'').toString().replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      return`<td><div class="cell"><input class="cell-input" value="${val}" id="ci-${rowId}-${field}" onkeydown="if(event.key==='Enter'){commitCell(${rowId},'${field}',this.value);}if(event.key==='Escape'){activeCell=null;render();}"></div></td>`;
+    }
+    if(editType==='num'){
+      const val=(r[field]!==undefined&&r[field]!==null)?r[field]:'';
+      return`<td><div class="cell"><input type="number" step="0.5" min="0" class="cell-num" value="${val}" id="ci-${rowId}-${field}" onkeydown="if(event.key==='Enter'){commitCell(${rowId},'${field}',this.value);}if(event.key==='Escape'){activeCell=null;render();}"></div></td>`;
+    }
+    if(editType==='date'){
+      const val=r[field]||'';
+      return`<td><div class="cell"><input type="date" class="cell-date" value="${val}" id="ci-${rowId}-${field}" onchange="commitCell(${rowId},'${field}',this.value||null)" onkeydown="if(event.key==='Escape'){activeCell=null;render();}"></div></td>`;
+    }
+    if(editType==='select'){
+      const val=r[field]||'';
+      const oh=opts.map(o=>`<option value="${o}"${o===val?' selected':''}>${o===''?'—':o}</option>`).join('');
+      return`<td><div class="cell"><select class="cell-select" id="ci-${rowId}-${field}" onchange="commitCell(${rowId},'${field}',this.value)" onkeydown="if(event.key==='Escape'){activeCell=null;render();}">${field==='persona'?'<option value="">— Sin asignar —</option>':''}${oh}</select></div></td>`;
+    }
+  }
+  return`<td class="editable" onclick="activeCell={rowId:${rowId},field:'${field}'};render()"><div class="cell">${display||'<span class="hint">—</span>'}</div></td>`;
+}
+
+// ─── FILTER / SORT ───────────────────────────────────────────────────────────
+function getFiltered(){
+  const fPersona=document.getElementById('f-persona').value;
+  const fAnio=document.getElementById('f-anio').value;
+  const q=(document.getElementById('f-search').value||'').toLowerCase();
+  return DATA.filter(r=>{
+    if(fPersona && r.persona!==fPersona) return false;
+    if(fAnio && anioOf(r)!==fAnio) return false;
+    if(q && !((r.organizacion||'').toLowerCase().includes(q) || (r.actividad||'').toLowerCase().includes(q) || (r.detalle||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+function sortBy(col){ if(curSortCol===col) curSortDir*=-1; else {curSortCol=col; curSortDir=1;} render(); }
+
+// ─── RENDER TABLE ────────────────────────────────────────────────────────────
+function renderTable(){
+  const filtered=getFiltered();
+  const totalHoras=filtered.reduce((s,r)=>s+(Number(r.horas)||0),0);
+  document.getElementById('cnt').textContent=filtered.length+' registros — '+fmtHoras(totalHoras)+' hrs';
+  const sorted=[...filtered].sort((a,b)=>{
+    let va=a[curSortCol], vb=b[curSortCol];
+    if(curSortCol==='horas'){ va=Number(va)||0; vb=Number(vb)||0; return (va-vb)*curSortDir; }
+    if(!va && !vb) return 0;
+    if(!va) return 1;
+    if(!vb) return -1;
+    if(typeof va==='string'){ va=va.toLowerCase(); vb=(vb||'').toLowerCase(); }
+    return va<vb?-curSortDir:va>vb?curSortDir:0;
+  });
+  if(!sorted.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Sin registros con los filtros actuales</div>`;
+  const si=c=>c===curSortCol?`<span class="si">${curSortDir>0?'▲':'▼'}</span>`:'';
+  const rows=sorted.map(r=>{
+    return `<tr>
+      ${makeCell(r.id,'fecha',fmtDate(r.fecha)?`<span style="font-size:12px">${fmtDate(r.fecha)}</span>`:'','date')}
+      ${makeCell(r.id,'actividad',r.actividad?`<strong>${r.actividad}</strong>`:'','text')}
+      ${makeCell(r.id,'detalle',r.detalle?`<span style="color:var(--text2)">${r.detalle}</span>`:'','text')}
+      ${makeCell(r.id,'horas',fmtHoras(r.horas)!==''?`<span class="badge b-persona">${fmtHoras(r.horas)} hrs</span>`:'','num')}
+      ${makeCell(r.id,'organizacion',r.organizacion?`<span>${r.organizacion}</span>`:'','text')}
+      ${makeCell(r.id,'persona',r.persona?`<span style="font-size:12px;font-weight:600">${r.persona}</span>`:'','select',sortedPersonas())}
+      <td><button class="del-btn" onclick="if(confirm('¿Eliminar este registro?')){deleteFromSheets(${r.id});DATA=DATA.filter(x=>x.id!==${r.id});render();}" title="Eliminar">🗑</button></td>
+    </tr>`;
+  }).join('');
+  return `<div class="table-wrap"><table>
+    <thead><tr>
+      <th class="sort" onclick="sortBy('fecha')" style="min-width:90px">Fecha ${si('fecha')}</th>
+      <th class="sort" onclick="sortBy('actividad')" style="min-width:160px">Actividad ${si('actividad')}</th>
+      <th style="min-width:220px">Detalle</th>
+      <th class="sort" onclick="sortBy('horas')" style="min-width:80px">Horas ${si('horas')}</th>
+      <th class="sort" onclick="sortBy('organizacion')" style="min-width:160px">Nombre Organización ${si('organizacion')}</th>
+      <th class="sort" onclick="sortBy('persona')" style="min-width:140px">Persona Puelche HC ${si('persona')}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ─── RESUMEN: horas por persona por año ──────────────────────────────────────
+function renderResumen(){
+  if(!DATA.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Aún no hay registros cargados</div>`;
+
+  const rOrg=(document.getElementById('r-org').value||'').toLowerCase();
+  const data = DATA.filter(r=>{
+    if(rOrg && !(r.organizacion||'').toLowerCase().includes(rOrg)) return false;
+    return true;
+  });
+
+  if(!data.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Sin registros con los filtros actuales</div>`;
+
+  const yearsSet=new Set();
+  let sinFecha=0;
+  data.forEach(r=>{ const y=anioOf(r); if(y) yearsSet.add(y); else sinFecha++; });
+  const years=[...yearsSet].sort();
+
+  if(!years.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Ningún registro tiene fecha válida todavía</div>`;
+
+  const rowNames=sortedPersonas();
+  const sums={};
+  rowNames.forEach(n=>sums[n]={});
+  data.forEach(r=>{
+    const name=r.persona||'Sin asignar';
+    const y=anioOf(r);
+    if(!y) return;
+    if(!sums[name]) { sums[name]={}; rowNames.push(name); }
+    sums[name][y]=(sums[name][y]||0)+(Number(r.horas)||0);
+  });
+
+  const rowTotals={};
+  rowNames.forEach(n=>{ rowTotals[n]=years.reduce((s,y)=>s+((sums[n]&&sums[n][y])||0),0); });
+  const visibleNames=rowNames.filter(n=>rowTotals[n]>0);
+
+  if(!visibleNames.length) return `<div style="text-align:center;padding:48px;color:var(--text3)">Nadie tiene horas registradas con los filtros actuales</div>`;
+
+  const totalsByYear={}; years.forEach(y=>totalsByYear[y]=0);
+  let grandTotal=0;
+  const bodyRows=visibleNames.map(n=>{
+    let rowTotal=0;
+    const cells=years.map(y=>{
+      const c=(sums[n]&&sums[n][y])||0;
+      rowTotal+=c; totalsByYear[y]+=c;
+      return `<td>${c?fmtHoras(c):'<span class="hint">—</span>'}</td>`;
+    }).join('');
+    grandTotal+=rowTotal;
+    return `<tr><td class="name">${n}</td>${cells}<td class="total">${fmtHoras(rowTotal)}</td></tr>`;
+  }).join('');
+  const totalRow=`<tr class="total-row"><td class="name">Total</td>${years.map(y=>`<td>${fmtHoras(totalsByYear[y])}</td>`).join('')}<td class="total">${fmtHoras(grandTotal)}</td></tr>`;
+  const nota = sinFecha ? `<div class="hint" style="margin-top:8px">${sinFecha} registro(s) sin fecha válida no se incluyen en este resumen.</div>` : '';
+
+  return `<div class="ct-wrap"><table class="ct">
+    <thead><tr><th class="left">Persona Puelche HC</th>${years.map(y=>`<th>${y}</th>`).join('')}<th>Total</th></tr></thead>
+    <tbody>${bodyRows}${totalRow}</tbody>
+  </table></div>${nota}`;
+}
+
+function render(){
+  const c=document.getElementById('main-content');
+  const tw=c.querySelector('.table-wrap');
+  const scrollTop=tw?tw.scrollTop:0;
+  c.innerHTML = curTab==='resumen' ? renderResumen() : renderTable();
+  const tw2=c.querySelector('.table-wrap');
+  if(tw2 && scrollTop) tw2.scrollTop=scrollTop;
+  if(activeCell){
+    const el=document.getElementById(`ci-${activeCell.rowId}-${activeCell.field}`);
+    if(el){el.focus();if(el.select)el.select();}
+  }
+}
+
+// ─── SETTINGS: PERSONAS ──────────────────────────────────────────────────────
+function openSettings(){ renderPersonaTags(); document.getElementById('ov-settings').classList.add('open'); }
+function renderPersonaTags(){
+  document.getElementById('tag-persona').innerHTML=sortedPersonas().map(n=>{
+    const i=PERSONAS.indexOf(n);
+    return `<div class="tag-item">${n}<button class="tag-del" onclick="PERSONAS.splice(${i},1);renderPersonaTags()">×</button></div>`;
+  }).join('');
+}
+function addPersona(){
+  const n=document.getElementById('new-persona-name').value.trim();
+  if(!n){alert('Ingresa el nombre.');return;}
+  if(PERSONAS.includes(n)){alert('Esa persona ya está en la lista.');return;}
+  PERSONAS.push(n);
+  document.getElementById('new-persona-name').value='';
+  renderPersonaTags();
+}
+
+// ─── NUEVO REGISTRO ──────────────────────────────────────────────────────────
+function openNew(){
+  document.getElementById('n-fecha').value='';
+  document.getElementById('n-actividad').value='';
+  document.getElementById('n-detalle').value='';
+  document.getElementById('n-horas').value='';
+  document.getElementById('n-org').value='';
+  document.getElementById('n-persona').value='';
+  document.getElementById('ov-new').classList.add('open');
+}
+function closeNew(){ document.getElementById('ov-new').classList.remove('open'); }
+function saveNew(){
+  const fecha=document.getElementById('n-fecha').value;
+  const actividad=document.getElementById('n-actividad').value.trim();
+  if(!fecha||!actividad){alert('Fecha y actividad son obligatorias.');return;}
+  const rec={
+    id:nextId++,
+    fecha,
+    actividad,
+    detalle:document.getElementById('n-detalle').value.trim(),
+    horas:Number(document.getElementById('n-horas').value)||0,
+    organizacion:document.getElementById('n-org').value.trim(),
+    persona:document.getElementById('n-persona').value,
+  };
+  DATA.push(rec);
+  closeNew();
+  saveToSheets(rec);
+  render();
+}
+
+// Close overlays on bg click
+['ov-new','ov-settings'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');});
+});
+
+// ─── CLOSE CELL ON OUTSIDE CLICK ─────────────────────────────────────────────
+document.addEventListener('mousedown', function(e){
+  if(!activeCell) return;
+  const activeEl = document.getElementById(`ci-${activeCell.rowId}-${activeCell.field}`);
+  if(e.target.tagName === 'SELECT' || e.target.closest('select')) return;
+  if(activeEl && activeEl.tagName === 'SELECT') return;
+  if(activeEl && activeEl.contains(e.target)) return;
+  if(activeEl) {
+    const val = activeEl.value !== undefined ? activeEl.value : activeEl.options?.[activeEl.selectedIndex]?.value;
+    if(val !== undefined) commitCell(activeCell.rowId, activeCell.field, val);
+    else { activeCell=null; render(); }
+  } else {
+    activeCell=null; render();
+  }
+}, true);
+
+// ─── PERSISTENCIA — Google Sheets Backend ────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbydxnKQHLUr49Zw9OdQM0SL8WLOJAgtXrUeVFtUf1u6LIMh6-0GDLWhFxTxj7JUWK6ICQ/exec';
+
+function showStatus(msg, type='info') {
+  let bar = document.getElementById('status-bar');
+  if (!bar) return;
+  bar.textContent = msg;
+  bar.style.background = type==='error' ? '#FAE5E5' : type==='ok' ? '#E5F4EE' : '#FDF0D8';
+  bar.style.color = type==='error' ? '#8F1A1A' : type==='ok' ? '#0F6E56' : '#7A4F0A';
+  bar.style.display = 'block';
+  if (type !== 'loading') setTimeout(() => bar.style.display='none', 3000);
+}
+
+function toSheetRecord(r){
+  return {
+    id: r.id,
+    Fecha: r.fecha || '',
+    Actividad: r.actividad,
+    Detalle: r.detalle,
+    Horas: r.horas,
+    Organizacion: r.organizacion,
+    Persona: r.persona,
+  };
+}
+
+async function loadFromSheets() {
+  showStatus('Cargando datos desde Google Sheets...', 'loading');
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=getAll');
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+
+    DATA = json.records.map(r => ({
+      id: Number(r.id),
+      fecha: r.Fecha || null,
+      actividad: r.Actividad || '',
+      detalle: r.Detalle || '',
+      horas: r.Horas !== '' && r.Horas !== undefined ? Number(r.Horas) : 0,
+      organizacion: r.Organizacion || '',
+      persona: r.Persona || '',
+    }));
+
+    nextId = Math.max(...DATA.map(r => r.id), 0) + 1;
+    initSelects();
+    render();
+    showStatus('Datos cargados ✓', 'ok');
+  } catch(err) {
+    showStatus('Error cargando datos: ' + err.message, 'error');
+    console.error(err);
+    initSelects();
+    render();
+  }
+}
+
+async function saveToSheets(record) {
+  showStatus('Guardando...', 'loading');
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'save', record: toSheetRecord(record) }),
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    showStatus('Guardado ✓', 'ok');
+  } catch(err) {
+    showStatus('Error al guardar: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+async function syncAll() {
+  if(!confirm('¿Sincronizar todos los datos con Google Sheets? Esto puede tardar unos segundos.')) return;
+  showStatus('Sincronizando todos los registros...', 'loading');
+  let ok = 0, errors = 0;
+  for(const r of DATA) {
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'save', record: toSheetRecord(r) }),
+      });
+      const json = await res.json();
+      if(json.error) throw new Error(json.error);
+      ok++;
+    } catch(err) {
+      errors++;
+      console.error('Error syncing id=' + r.id, err);
+    }
+  }
+  if(errors === 0) showStatus(`Sincronización completa ✓ — ${ok} registros guardados`, 'ok');
+  else showStatus(`Sincronización parcial — ${ok} OK, ${errors} errores`, 'error');
+}
+
+async function deleteFromSheets(id) {
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'delete', id }),
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+  } catch(err) {
+    showStatus('Error al eliminar: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+// ─── LOCK SCREEN (clave de acceso, hash SHA-256) ─────────────────────────────
+const APP_PASSWORD_HASH = '39cbbeb60b440d0c9620fd0df496ebe536f5a7ea4e5d57bcc6635b229bb96e94';
+const LOCK_SESSION_KEY = 'puelche_probono_unlocked';
+
+async function sha256Hex(text){
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkLockPassword(){
+  const val = document.getElementById('lock-input').value;
+  const hash = await sha256Hex(val);
+  if(hash === APP_PASSWORD_HASH){
+    sessionStorage.setItem(LOCK_SESSION_KEY, '1');
+    unlockApp();
+  } else {
+    document.getElementById('lock-error').style.display='block';
+    document.getElementById('lock-input').value='';
+    document.getElementById('lock-input').focus();
+  }
+}
+
+function unlockApp(){
+  document.getElementById('lock-overlay').style.display='none';
+  initSelects();
+  loadFromSheets();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+if(sessionStorage.getItem(LOCK_SESSION_KEY) === '1'){
+  unlockApp();
+} else {
+  document.getElementById('lock-input').focus();
+}
+</script>
+</body>
+</html>
