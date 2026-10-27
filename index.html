@@ -435,7 +435,7 @@ function openSettings(){ renderPersonaTags(); document.getElementById('ov-settin
 function renderPersonaTags(){
   document.getElementById('tag-persona').innerHTML=sortedPersonas().map(n=>{
     const i=PERSONAS.indexOf(n);
-    return `<div class="tag-item">${n}<button class="tag-del" onclick="PERSONAS.splice(${i},1);renderPersonaTags()">×</button></div>`;
+    return `<div class="tag-item">${n}<button class="tag-del" onclick="removePersona(${i})">×</button></div>`;
   }).join('');
 }
 function addPersona(){
@@ -444,7 +444,15 @@ function addPersona(){
   if(PERSONAS.includes(n)){alert('Esa persona ya está en la lista.');return;}
   PERSONAS.push(n);
   document.getElementById('new-persona-name').value='';
+  savePersonasToSheets();
   renderPersonaTags();
+  initSelects();
+}
+function removePersona(i){
+  PERSONAS.splice(i,1);
+  savePersonasToSheets();
+  renderPersonaTags();
+  initSelects();
 }
 
 // ─── NUEVO REGISTRO ──────────────────────────────────────────────────────────
@@ -568,6 +576,35 @@ async function saveToSheets(record) {
   }
 }
 
+async function loadPersonas() {
+  try {
+    const res = await fetch(SCRIPT_URL + '?action=getPersonas');
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    if (Array.isArray(json.personas) && json.personas.length) {
+      PERSONAS = json.personas;
+    }
+  } catch(err) {
+    console.error('No se pudo cargar la lista de Personas desde Sheets, se usa la lista por defecto:', err);
+  }
+}
+
+async function savePersonasToSheets() {
+  showStatus('Guardando personas...', 'loading');
+  try {
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'savePersonas', personas: PERSONAS }),
+    });
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    showStatus('Personas guardadas ✓', 'ok');
+  } catch(err) {
+    showStatus('Error guardando personas: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
 async function syncAll() {
   if(!confirm('¿Sincronizar todos los datos con Google Sheets? Esto puede tardar unos segundos.')) return;
   showStatus('Sincronizando todos los registros...', 'loading');
@@ -627,8 +664,9 @@ async function checkLockPassword(){
   }
 }
 
-function unlockApp(){
+async function unlockApp(){
   document.getElementById('lock-overlay').style.display='none';
+  await loadPersonas();
   initSelects();
   loadFromSheets();
 }
