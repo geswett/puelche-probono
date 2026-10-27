@@ -253,8 +253,13 @@ function fillSel(id,opts,withPlaceholder){
 }
 function initSelects(){
   fillSel('n-persona', sortedPersonas());
+  // El filtro incluye también nombres que ya no están en la lista activa de
+  // Personas pero que tienen registros históricos, para no perder la
+  // posibilidad de filtrar por ellos.
+  const historicos=[...new Set(DATA.map(r=>r.persona).filter(Boolean))];
+  const filterNames=[...new Set([...sortedPersonas(), ...historicos])].sort((a,b)=>a.localeCompare(b,'es'));
   const fPersona=document.getElementById('f-persona');
-  fPersona.innerHTML='<option value="">Todas</option>'+sortedPersonas().map(n=>`<option value="${n}">${n}</option>`).join('');
+  fPersona.innerHTML='<option value="">Todas</option>'+filterNames.map(n=>`<option value="${n}">${n}</option>`).join('');
   const anios=[...new Set(DATA.map(anioOf).filter(Boolean))].sort().reverse();
   const fAnio=document.getElementById('f-anio');
   fAnio.innerHTML='<option value="">Todos</option>'+anios.map(a=>`<option value="${a}">${a}</option>`).join('');
@@ -298,7 +303,11 @@ function makeCell(rowId,field,display,editType,opts=null){
     }
     if(editType==='select'){
       const val=r[field]||'';
-      const oh=opts.map(o=>`<option value="${o}"${o===val?' selected':''}>${o===''?'—':o}</option>`).join('');
+      // Si el valor guardado ya no está en la lista activa (ej: se borró esa
+      // persona de ⚙ Personas), lo agregamos igual como opción para no
+      // perder/ocultar la atribución histórica del registro.
+      const selectOpts = (val && !opts.includes(val)) ? [...opts, val] : opts;
+      const oh=selectOpts.map(o=>`<option value="${o}"${o===val?' selected':''}>${o===''?'—':o}</option>`).join('');
       return`<td><div class="cell"><select class="cell-select" id="ci-${rowId}-${field}" onchange="commitCell(${rowId},'${field}',this.value)" onkeydown="if(event.key==='Escape'){activeCell=null;render();}">${field==='persona'?'<option value="">— Sin asignar —</option>':''}${oh}</select></div></td>`;
     }
   }
